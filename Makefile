@@ -21,8 +21,8 @@ default:
 all: image tests
 
 Dockerfile: Dockerfile.in
-	sed 's/@SERVERNAME@/$(SERVERNAME)/' Dockerfile.in > Dockerfile
-	sed 's/@PASSWORD@/$(PASSWORD)/' Dockerfile.in > Dockerfile
+	sed 's/@SERVERNAME@/$(SERVERNAME)/' < Dockerfile.in > Dockerfile
+	sed 's/@PASSWORD@/$(PASSWORD)/' < Dockerfile.in > Dockerfile
 
 $(IMAGENAME).log:
 	docker build --no-cache --rm --force-rm -t $(IMAGENAME) . > $(IMAGENAME).log
