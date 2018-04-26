@@ -1,6 +1,7 @@
-IMAGENAME = "imgtec"
-SERVERNAME = "test.com"
-PASSWORD = "mypass"
+IMAGENAME = imgtec
+SERVERNAME = test.com
+PASSWORD = mypass
+MAXCONNECTIONS = 1000
 
 default:
 	@echo
@@ -19,18 +20,32 @@ default:
 
 all: image tests
 
-image: Dockerfile.in
+Dockerfile: Dockerfile.in
 	sed 's/@SERVERNAME@/$(SERVERNAME)/' Dockerfile.in > Dockerfile
 	sed 's/@PASSWORD@/$(PASSWORD)/' Dockerfile.in > Dockerfile
-	docker build --no-cache -t $(IMAGENAME) .
 
-tests: runtests.py
+$(IMAGENAME).log:
+	docker build --no-cache --rm --force-rm -t $(IMAGENAME) . > $(IMAGENAME).log
+
+image: Dockerfile $(IMAGENAME).log
+
+run: image
+	docker run -d -p 2222:22 -p 8080:80 -t imgtec
+
+venv:
 	virtualenv venv
+	( \
+		source venv/bin/activate; \
+		pip install paramiko; \
+		deactivate; \
+	)
+
+tests: image venv runtests.py
 	( \
 		export IMAGENAME="$(IMAGENAME)"; \
 	       	export PASSWORD="$(PASSWORD)"; \
+	       	export MAXCONNECTIONS="$(MAXCONNECTIONS)"; \
 		source venv/bin/activate; \
-		pip install paramiko; \
 		python runtests.py; \
 		deactivate; \
 	)
@@ -46,3 +61,4 @@ ifneq ($(images), )
 endif
 	rm -f Dockerfile
 	rm -rf venv
+	rm -f $(IMAGENAME).log

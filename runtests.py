@@ -6,9 +6,11 @@ from paramiko import AuthenticationException, SSHException
 import time
 import urllib.request as urlreq
 import os
+import csv
 
 container_name = os.environ['IMAGENAME']
 password = os.environ['PASSWORD']
+maxconnections = os.environ['MAXCONNECTIONS']
 ports = { 'http' : (8080, 80), 'ssh' : (2222, 22) }
 
 
@@ -64,6 +66,29 @@ class ImgtecContainer(unittest.TestCase):
         url = "http://127.0.0.1:{}".format(ports['http'][0])
         with urlreq.urlopen(url) as conn:
             self.assertEqual(conn.status, 200)
+
+    def test_many(self):
+
+        '''Open multiple connections and make sure that the web server
+        can handle them. Uses locust package to generate statistics.'''
+
+        command = ['locust', '-f', 'locustfile.py', '--no-web',
+                   '--csv=locust', '--only-summary']
+        command.append('--host=http://localhost:{}'.format(ports['http'][0]))
+        command.extend(('-c', str(maxconnections)))
+        command.extend(('-t', '2m'))
+        print(command)
+        subprocess.run(command)
+        with open('locust_requests.csv') as csvfile:
+            reader = csv.reader(csvfile, delimiter=',', quotechar='"')
+            for row in reader:
+                if row[1] == "/":
+                    # This resource exists
+                    self.assertEqual(int(row[3]), 0)
+                elif row[1] == "/blah":
+                    # This resource does not exist
+                    self.assertEqual(int(row[2]), 0)
+
 
 
 if __name__ == '__main__':
