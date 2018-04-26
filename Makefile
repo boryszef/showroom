@@ -2,6 +2,7 @@ IMAGENAME = imgtec
 SERVERNAME = test.com
 PASSWORD = mypass
 MAXCONNECTIONS = 1000
+LOCUSTSUFFIX = locust
 
 default:
 	@echo
@@ -21,8 +22,8 @@ default:
 all: image tests
 
 Dockerfile: Dockerfile.in
-	sed 's/@SERVERNAME@/$(SERVERNAME)/' < Dockerfile.in > Dockerfile
-	sed 's/@PASSWORD@/$(PASSWORD)/' < Dockerfile.in > Dockerfile
+	sed -e 's/@SERVERNAME@/$(SERVERNAME)/' \
+	    -e 's/@PASSWORD@/$(PASSWORD)/' < Dockerfile.in > Dockerfile
 
 $(IMAGENAME).log:
 	docker build --no-cache --rm --force-rm -t $(IMAGENAME) . > $(IMAGENAME).log
@@ -36,7 +37,7 @@ venv:
 	virtualenv venv
 	( \
 		source venv/bin/activate; \
-		pip install paramiko; \
+		pip install paramiko locust; \
 		deactivate; \
 	)
 
@@ -45,6 +46,7 @@ tests: image venv runtests.py
 		export IMAGENAME="$(IMAGENAME)"; \
 	       	export PASSWORD="$(PASSWORD)"; \
 	       	export MAXCONNECTIONS="$(MAXCONNECTIONS)"; \
+	       	export LOCUSTSUFFIX="$(LOCUSTSUFFIX)"; \
 		source venv/bin/activate; \
 		python runtests.py; \
 		deactivate; \
@@ -62,3 +64,4 @@ endif
 	rm -f Dockerfile
 	rm -rf venv
 	rm -f $(IMAGENAME).log
+	rm -f $(LOCUSTSUFFIX)_distribution.csv $(LOCUSTSUFFIX)_requests.csv

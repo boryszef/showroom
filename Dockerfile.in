@@ -6,13 +6,13 @@ RUN apt-get update
 # Setup ssh
 RUN apt-get install -y openssh-server
 RUN mkdir /var/run/sshd
-RUN echo 'root:%PASSWORD%' | chpasswd
+RUN echo 'root:@PASSWORD@' | chpasswd
 RUN sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config
 RUN sed 's@session\s*required\s*pam_loginuid.so@session optional pam_loginuid.so@g' -i /etc/pam.d/sshd
 
 # Setup apache2
 RUN apt-get install -y apache2
-RUN echo 'ServerName "%SERVERNAME%"' >> /etc/apache2/apache2.conf
+RUN echo 'ServerName "@SERVERNAME@"' >> /etc/apache2/apache2.conf
 COPY index.html /var/www/html
 
 EXPOSE 22

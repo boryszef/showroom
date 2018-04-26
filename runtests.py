@@ -11,6 +11,9 @@ import csv
 container_name = os.environ['IMAGENAME']
 password = os.environ['PASSWORD']
 maxconnections = os.environ['MAXCONNECTIONS']
+locustsuffix = os.environ['LOCUSTSUFFIX']
+
+
 ports = { 'http' : (8080, 80), 'ssh' : (2222, 22) }
 
 
@@ -72,14 +75,14 @@ class ImgtecContainer(unittest.TestCase):
         '''Open multiple connections and make sure that the web server
         can handle them. Uses locust package to generate statistics.'''
 
-        command = ['locust', '-f', 'locustfile.py', '--no-web',
-                   '--csv=locust', '--only-summary']
+        command = ['locust', '-f', 'locustfile.py', '--no-web', '--only-summary']
         command.append('--host=http://localhost:{}'.format(ports['http'][0]))
+        command.append(('--csv={}'.format(locustsuffix)))
         command.extend(('-c', str(maxconnections)))
         command.extend(('-t', '2m'))
         print(command)
         subprocess.run(command)
-        with open('locust_requests.csv') as csvfile:
+        with open('{}_requests.csv'.format(locustsuffix)) as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
             for row in reader:
                 if row[1] == "/":
