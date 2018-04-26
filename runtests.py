@@ -80,8 +80,7 @@ class ImgtecContainer(unittest.TestCase):
         command.append(('--csv={}'.format(locustsuffix)))
         command.extend(('-c', str(maxconnections)))
         command.extend(('-t', '2m'))
-        print(command)
-        subprocess.run(command)
+        subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         with open('{}_requests.csv'.format(locustsuffix)) as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
             for row in reader:
